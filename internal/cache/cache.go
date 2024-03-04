@@ -10,7 +10,7 @@ import (
 
 // <---------------------------------------------------------------------------------------------------->
 
-var EntrieFilesystem = Filesystem{mainDirs: make(map[string]map[int]map[string][]interface{})}
+var EntrieFilesystem Filesystem
 
 // <---------------------------------------------------------------------------------------------------->
 
@@ -39,32 +39,35 @@ func Create(rootPath string) {
 			entryPath := filepath.Join(currentDir, entry.Name())
 
 			if entry.IsDir() {
+				// do check for is excluded at all, if so just don't add to stack
 				pathStack = append(pathStack, entryPath)
+				tempSlice = append(tempSlice, []string{entryPath, entry.Name(), "Folder"})
 			} else {
-				tempSlice = append(tempSlice, []string{entryPath, entry.Name(), filepath.Ext(entry.Name())})
+				fileExtension := filepath.Ext(entry.Name())
+				if len(fileExtension) < 1 {
+					fileExtension = "File"
+				}
+				tempSlice = append(tempSlice, []string{entryPath, entry.Name(), fileExtension})
 			}
 		}
 
-		EntrieFilesystem.add(&tempSlice, true)
+		fs.add(&tempSlice, isMainDirs)
 	}
 }
 
-func (fs *Filesystem) add(newSlice *[][]string, isMainDirs bool) {
+func (fs *Filesystem) add(newFiles *[][]string, isMainDirs bool) {
 	if !isMainDirs {
 		return
 	}
 
-	for _, item := range *newSlice {
+	for _, item := range *newFiles {
 		itemPath := item[0]
 		itemName := item[1]
 		itemExtension := item[2]
 
-		// trim file extensions from the name
-		if len(itemExtension) > 0 {
+		// trim file extensions from the name, if it has one
+		if itemExtension != "File" && itemExtension != "Folder" {
 			itemName = itemName[:len(itemName)-len(itemExtension)]
-		} else {
-			// if there is no file extension make the extension "File"
-			itemExtension = "File"
 		}
 
 		// check if the file type is already stored in the fs, if not add it in
