@@ -1,0 +1,11 @@
+{
+    "mainDirs": [
+        "C:/Users/<USERNAME>/"
+    ],
+    "excludeSubMainDirs": [
+        "C:/Users/<USERNAME>/AppData/"
+    ],
+    "excludeDirs": [
+
+    ]
+}
