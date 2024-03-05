@@ -6,11 +6,13 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/SkillpTm/better-windows-search/internal/config"
 )
 
 // <---------------------------------------------------------------------------------------------------->
 
-var EntrieFilesystem Filesystem
+var EntrieFilesystem *Filesystem
 
 // <---------------------------------------------------------------------------------------------------->
 
@@ -19,8 +21,22 @@ type Filesystem struct {
 	// secondaryDirs map[string]map[int]map[string][]interface{}
 }
 
-func Create(rootPath string) {
-	pathStack := []string{rootPath}
+func New(dirPaths *[]string, isMainDirs bool) *Filesystem {
+	fs := Filesystem{mainDirs: make(map[string]map[int]map[string][]interface{})}
+
+	fs.createDirs(dirPaths, isMainDirs)
+	// fs.createDirs(rootPath, false)
+
+	return &fs
+}
+
+func (fs *Filesystem) createDirs(dirPaths *[]string, isMainDirs bool) {
+	pathStack := *dirPaths
+
+	if !isMainDirs {
+		return
+		// exclude from main dirs add to secondary stack
+	}
 
 	for len(pathStack) > 0 {
 		// pop dir from stack
