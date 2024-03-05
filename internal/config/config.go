@@ -35,7 +35,7 @@ func New() (*Config, error) {
 	// populate the newConfig with properly formated strings
 	for _, value := range configMap {
 		newSlice := util.ConvertSliceInterface[string](value.([]interface{}))
-		newSlice = util.FormatFileEntries(newSlice, true)
+		newSlice = util.FormatEntries(newSlice, true)
 		newSlice, err = util.InsertUsername(newSlice)
 		if err != nil {
 			return &newConfig, fmt.Errorf("couldn't replace '<USERNAME>'; %s", err.Error())
