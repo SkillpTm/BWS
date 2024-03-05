@@ -21,11 +21,11 @@ type Config struct {
 
 // <---------------------------------------------------------------------------------------------------->
 
-// New creates a new Conifg struct with the values from ./configs/config.json
+// New creates a new Conifg struct with the values from ./../configs/config.json
 func New() (*Config, error) {
 	newConfig := Config{}
 
-	configMap, err := util.GetJSONData("./configs/config.json")
+	configMap, err := util.GetJSONData("./../configs/config.json")
 	if err != nil {
 		return &newConfig, fmt.Errorf("couldn't open config JSON file; %s", err.Error())
 	}
