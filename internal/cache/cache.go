@@ -55,7 +55,16 @@ func (fs *Filesystem) createDirs(dirPaths *[]string, isMainDirs bool) {
 			entryPath := filepath.Join(currentDir, entry.Name())
 
 			if entry.IsDir() {
-				// do check for is excluded at all, if so just don't add to stack
+				// check if the dir is excluded
+				if checkDirExcluded(entryPath, config.BWSConfig.ExcludeDirs) {
+					continue
+				}
+
+				// check if the dir is in the excluded main dirs
+				if isMainDirs && checkDirExcluded(entryPath, config.BWSConfig.ExcludeSubMainDirs) {
+					continue
+				}
+
 				pathStack = append(pathStack, entryPath)
 				tempSlice = append(tempSlice, []string{entryPath, entry.Name(), "Folder"})
 			} else {
@@ -69,6 +78,17 @@ func (fs *Filesystem) createDirs(dirPaths *[]string, isMainDirs bool) {
 
 		fs.add(&tempSlice, isMainDirs)
 	}
+}
+
+// returns true if the a dir is in the provided slice
+func checkDirExcluded(dir string, excludedDirs []string) bool {
+	for _, excludedDir := range excludedDirs {
+		if strings.ReplaceAll(dir, "\\", "/") == excludedDir[:len(excludedDir)-1] {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (fs *Filesystem) add(newFiles *[][]string, isMainDirs bool) {
