@@ -119,8 +119,7 @@ func (fs *Filesystem) add(newFiles *[][]string, isMainDirs bool) {
 		}
 
 		// add the file into the fs at its length with the path as a key and the name as it's value
-		fs.mainDirs[itemExtension][len(itemName)] = append(fs.mainDirs[itemExtension][len(itemName)], []interface{}{itemPath, itemName})
-		//TODO add binary here
+		fs.mainDirs[itemExtension][len(itemName)] = append(fs.mainDirs[itemExtension][len(itemName)], []interface{}{itemPath, itemName, Encode(itemName)})
 	}
 }
 
