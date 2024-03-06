@@ -121,3 +121,18 @@ func (fs *Filesystem) add(newFiles *[][]string, isMainDirs bool) {
 		//TODO add binary here
 	}
 }
+
+// WriteToFile saves mainDirs and secondaryDirs into individual jsons
+func (fs *Filesystem) WriteToFile() error {
+	err := util.WriteToJSON("./cache/mainDirs.json", fs.mainDirs)
+	if err != nil {
+		return fmt.Errorf("couldn't write mainDirs to JSON; %s", err.Error())
+	}
+
+	err = util.WriteToJSON("./cache/secondaryDirs.json", fs.secondaryDirs)
+	if err != nil {
+		return fmt.Errorf("couldn't write secondaryDirs to JSON; %s", err.Error())
+	}
+
+	return nil
+}
