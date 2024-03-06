@@ -15,7 +15,7 @@ import (
 // <---------------------------------------------------------------------------------------------------->
 
 // ConvertSliceInterface converts a []interface{} to a slice of any type
-func ConvertSliceInterface[T any](sliceInput []interface{}) []T {
+func ConvertSliceInterface[T comparable](sliceInput []interface{}) []T {
 	newSlice := []T{}
 
 	for _, item := range sliceInput {
