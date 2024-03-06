@@ -17,12 +17,13 @@ var EntrieFilesystem *Filesystem
 // <---------------------------------------------------------------------------------------------------->
 
 type Filesystem struct {
-	mainDirs map[string]map[int]map[string][]interface{}
-	// secondaryDirs map[string]map[int]map[string][]interface{}
+	mainDirs      map[string]map[int][][]interface{}
+	secondaryDirs map[string]map[int][][]interface{}
 }
 
+// New returns a pointer to a Filesystem struct that has been filled up according to the config file
 func New(dirPaths *[]string, isMainDirs bool) *Filesystem {
-	fs := Filesystem{mainDirs: make(map[string]map[int]map[string][]interface{})}
+	fs := Filesystem{mainDirs: make(map[string]map[int][][]interface{})}
 
 	fs.createDirs(dirPaths, isMainDirs)
 	// fs.createDirs(rootPath, false)
@@ -108,16 +109,16 @@ func (fs *Filesystem) add(newFiles *[][]string, isMainDirs bool) {
 
 		// check if the file type is already stored in the fs, if not add it in
 		if _, ok := fs.mainDirs[itemExtension]; !ok {
-			fs.mainDirs[itemExtension] = make(map[int]map[string][]interface{})
+			fs.mainDirs[itemExtension] = make(map[int][][]interface{})
 		}
 
 		// check if the file length is already stored for the file extension, if not add it in
 		if _, ok := fs.mainDirs[itemExtension][len(itemName)]; !ok {
-			fs.mainDirs[itemExtension][len(itemName)] = make(map[string][]interface{})
+			fs.mainDirs[itemExtension][len(itemName)] = [][]interface{}{}
 		}
 
 		// add the file into the fs at its length with the path as a key and the name as it's value
-		fs.mainDirs[itemExtension][len(itemName)][strings.ReplaceAll(itemPath, "\\", "/")] = []interface{}{itemName}
+		fs.mainDirs[itemExtension][len(itemName)] = append(fs.mainDirs[itemExtension][len(itemName)], []interface{}{util.FormatEntry(itemPath, false), itemName})
 		//TODO add binary here
 	}
 }
