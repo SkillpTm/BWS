@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/SkillpTm/better-windows-search/internal/config"
+	"github.com/SkillpTm/better-windows-search/internal/util"
 )
 
 // <---------------------------------------------------------------------------------------------------->
@@ -53,22 +53,29 @@ func (fs *Filesystem) createDirs(dirPaths *[]string, isMainDirs bool) {
 		tempSlice := [][]string{}
 
 		for _, entry := range currentEntries {
-			entryPath := filepath.Join(currentDir, entry.Name())
-
 			if entry.IsDir() {
+				entryPath := util.FormatEntry(filepath.Join(currentDir, entry.Name()), true)
+
+				// check if the current dir is an excluded name
+				if util.SliceContains[string](config.BWSConfig.ExcludeDirsByName, entry.Name()) {
+					continue
+				}
+
 				// check if the dir is excluded
-				if checkDirExcluded(entryPath, config.BWSConfig.ExcludeDirs) {
+				if util.SliceContains[string](config.BWSConfig.ExcludeDirs, entryPath) {
 					continue
 				}
 
 				// check if the dir is in the excluded main dirs
-				if isMainDirs && checkDirExcluded(entryPath, config.BWSConfig.ExcludeSubMainDirs) {
+				if isMainDirs && util.SliceContains[string](config.BWSConfig.ExcludeSubMainDirs, entryPath) {
 					continue
 				}
 
 				pathStack = append(pathStack, entryPath)
 				tempSlice = append(tempSlice, []string{entryPath, entry.Name(), "Folder"})
 			} else {
+				entryPath := util.FormatEntry(filepath.Join(currentDir, entry.Name()), false)
+
 				fileExtension := filepath.Ext(entry.Name())
 				if len(fileExtension) < 1 {
 					fileExtension = "File"
@@ -79,17 +86,6 @@ func (fs *Filesystem) createDirs(dirPaths *[]string, isMainDirs bool) {
 
 		fs.add(&tempSlice, isMainDirs)
 	}
-}
-
-// returns true if the a dir is in the provided slice
-func checkDirExcluded(dir string, excludedDirs []string) bool {
-	for _, excludedDir := range excludedDirs {
-		if strings.ReplaceAll(dir, "\\", "/") == excludedDir[:len(excludedDir)-1] {
-			return true
-		}
-	}
-
-	return false
 }
 
 func (fs *Filesystem) add(newFiles *[][]string, isMainDirs bool) {
