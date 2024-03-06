@@ -66,6 +66,11 @@ func (fs *Filesystem) createDirs(dirPaths *[]string, isMainDirs bool) {
 					continue
 				}
 
+				// check if we found a mainDirs folder while not adding to mainDirs
+				if !isMainDirs && util.SliceContains[string](config.BWSConfig.Maindirs, entryPath) {
+					continue
+				}
+
 				// check if the dir is in the excluded main dirs
 				if isMainDirs && util.SliceContains[string](config.BWSConfig.ExcludeSubMainDirs, entryPath) {
 					continue
