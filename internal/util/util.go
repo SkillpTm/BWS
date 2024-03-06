@@ -92,3 +92,34 @@ func GetJSONData(filePath string) (map[string]interface{}, error) {
 
 	return jsonData, returnErr
 }
+
+// WriteToJSON will take a map with JSON formated data and the file path and write to that file
+func WriteToJSON(filePath string, inputData interface{}) error {
+	// define return var early
+	var returnErr error = nil
+
+	jsonFile, err := os.Create(filePath)
+	if err != nil {
+		return fmt.Errorf("couldn't open JSON file (%s); %s", filePath, err.Error())
+	}
+
+	// defer close the file with error handling
+	defer func() {
+		err = jsonFile.Close()
+		if err != nil {
+			returnErr = fmt.Errorf("couldn't close JSON file (%s); %s", filePath, jsonFile.Close())
+		}
+	}()
+
+	jsonData, err := json.MarshalIndent(inputData, "", "	")
+	if err != nil {
+		return fmt.Errorf("couldn't marshal JSON data; %s", err.Error())
+	}
+
+	_, err = jsonFile.Write(jsonData)
+	if err != nil {
+		return fmt.Errorf("couldn't write JSON data to JSON file (%s); %s", filePath, err.Error())
+	}
+
+	return returnErr
+}
