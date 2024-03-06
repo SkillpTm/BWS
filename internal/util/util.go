@@ -42,23 +42,21 @@ func InsertUsername(pathInputs []string) ([]string, error) {
 	return pathInputs, nil
 }
 
-// FormatEntries replaces "\" with "/" and for folders adds a "/" at the end, if there isn't one already
-// This can't be used with a mix of files and folders
-func FormatEntries(entries []string, isFolder bool) []string {
-	for index, entry := range entries {
-		entries[index] = strings.ReplaceAll(entry, "\\", "/")
+// FormatEntry replaces "\" with "/" and for folders adds a "/" at the end, if there isn't one already
+func FormatEntry(entry string, isFolder bool) string {
+	entry = strings.ReplaceAll(entry, "\\", "/")
 
-		// if the inputs are just entries skip them
-		if !isFolder {
-			continue
-		}
-
-		if string(entry[len(entry)-1]) != "/" {
-			entries[index] = entries[index] + "/"
-		}
+	// if the inputs are just entries skip them
+	if !isFolder {
+		return entry
 	}
 
-	return entries
+	// check if the last char is a "/" if not append it
+	if string(entry[len(entry)-1]) != "/" {
+		entry += "/"
+	}
+
+	return entry
 }
 
 // GetJSONData will provide a map with JSON data of the provided file
