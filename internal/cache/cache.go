@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
 
 	"github.com/SkillpTm/better-windows-search/internal/config"
 	"github.com/SkillpTm/better-windows-search/internal/util"
@@ -12,7 +13,11 @@ import (
 
 // <---------------------------------------------------------------------------------------------------->
 
-var EntrieFilesystem *Filesystem
+var (
+	EntrieFilesystem *Filesystem
+	// 10000000 is the channel size, because we just need a ridiculously large channel to store all the paths until we traversed them
+	pathQueue = make(chan string, 10000000)
+)
 
 // <---------------------------------------------------------------------------------------------------->
 
@@ -22,35 +27,60 @@ type Filesystem struct {
 }
 
 // New returns a pointer to a Filesystem struct that has been filled up according to the config file
-func New(dirPaths *[]string, isMainDirs bool) *Filesystem {
-	fs := Filesystem{mainDirs: make(map[string]map[int][][]interface{})}
+func New(mainDirPaths []string, secondaryDirPaths []string) *Filesystem {
+	fs := Filesystem{mainDirs: make(map[string]map[int][][]interface{}), secondaryDirs: make(map[string]map[int][][]interface{})}
 
-	fs.createDirs(dirPaths, isMainDirs)
-	// fs.createDirs(rootPath, false)
+	fs.create(mainDirPaths, true)
+	fs.create(secondaryDirPaths, false)
 
 	return &fs
 }
 
-func (fs *Filesystem) createDirs(dirPaths *[]string, isMainDirs bool) {
-	pathStack := *dirPaths
-
+// create gets and sets the folders set to either mainDirPaths or secondaryDirPaths
+func (fs *Filesystem) create(dirPaths []string, isMainDirs bool) {
+	// if we aren't adding to the mainDirs add the excluded mainDirs directly to the queue
 	if !isMainDirs {
-		return
-		// exclude from main dirs add to secondary stack
+		dirPaths = append(dirPaths, config.BWSConfig.ExcludeSubMainDirs...)
+	}
+	for _, dir := range dirPaths {
+		pathQueue <- dir
 	}
 
-	for len(pathStack) > 0 {
-		// pop dir from stack
-		currentDir := pathStack[len(pathStack)-1]
-		pathStack = pathStack[:len(pathStack)-1]
+	var wg sync.WaitGroup
+
+	// 10000000 is the channel size, because we just need a ridiculously large channel to store all the results until we add them to the fs
+	resultsChan := make(chan *[][]string, 10000000)
+
+	for range config.BWSConfig.CPUThreads {
+		wg.Add(1)
+		go fs.traverse(isMainDirs, resultsChan, &wg)
+	}
+
+	wg.Wait()
+
+	close(resultsChan)
+
+	for result := range resultsChan {
+		fs.add(result, isMainDirs)
+	}
+}
+
+// walkDir walks through the pathQueue and adds all new and valid entries into the resultsChan
+func (fs *Filesystem) traverse(isMainDirs bool, resultsChan chan<- *[][]string, wg *sync.WaitGroup) {
+	// loop over the queue until it's empty
+	for currentDir := range pathQueue {
+		newPaths := []string{}
+		newEntries := [][]string{}
 
 		currentEntries, err := os.ReadDir(currentDir)
 		if err != nil {
-			fmt.Printf("Error accessing directory %s: %v\n", currentDir, err)
+			// an error here simply means we didn't have the permissions to read a dir, so we ignore it
+			if len(pathQueue) < 1 {
+				break
+			}
+
 			continue
 		}
-
-		tempSlice := [][]string{}
 
 		for _, entry := range currentEntries {
 			if entry.IsDir() {
@@ -66,7 +96,7 @@ func (fs *Filesystem) createDirs(dirPaths *[]string, isMainDirs bool) {
 					continue
 				}
 
-				// check if we found a mainDirs folder while not adding to mainDirs
+				// check if we found a mainDirs folder while not mainDirs working with mainDirs
 				if !isMainDirs && util.SliceContains[string](config.BWSConfig.Maindirs, entryPath) {
 					continue
 				}
@@ -76,8 +106,8 @@ func (fs *Filesystem) createDirs(dirPaths *[]string, isMainDirs bool) {
 					continue
 				}
 
-				pathStack = append(pathStack, entryPath)
-				tempSlice = append(tempSlice, []string{entryPath, entry.Name(), "Folder"})
+				newPaths = append(newPaths, entryPath)
+				newEntries = append(newEntries, []string{entryPath, entry.Name(), "Folder"})
 			} else {
 				entryPath := util.FormatEntry(filepath.Join(currentDir, entry.Name()), false)
 
@@ -85,12 +115,23 @@ func (fs *Filesystem) createDirs(dirPaths *[]string, isMainDirs bool) {
 				if len(fileExtension) < 1 {
 					fileExtension = "File"
 				}
-				tempSlice = append(tempSlice, []string{entryPath, entry.Name(), fileExtension})
+				newEntries = append(newEntries, []string{entryPath, entry.Name(), fileExtension})
 			}
 		}
 
-		fs.add(&tempSlice, isMainDirs)
+		for _, path := range newPaths {
+			pathQueue <- path
+		}
+
+		resultsChan <- &newEntries
+
+		if len(pathQueue) < 1 {
+			break
+		}
 	}
+
+	// when the queue is empty disolve the worker
+	wg.Done()
 }
 
 func (fs *Filesystem) add(newFiles *[][]string, isMainDirs bool) {
