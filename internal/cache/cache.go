@@ -15,8 +15,6 @@ import (
 
 var (
 	EntrieFilesystem *Filesystem
-	// 10000000 is the channel size, because we just need a ridiculously large channel to store all the paths until we traversed them
-	pathQueue = make(chan string, 10000000)
 )
 
 // <---------------------------------------------------------------------------------------------------->
@@ -42,6 +40,14 @@ func (fs *Filesystem) create(dirPaths []string, isMainDirs bool) {
 	if !isMainDirs {
 		dirPaths = append(dirPaths, config.BWSConfig.ExcludeSubMainDirs...)
 	}
+
+	if len(dirPaths) < 1 {
+		return
+	}
+
+	// 10000000 is the channel size, because we just need a ridiculously large channel to store all the paths until we traversed them
+	var pathQueue = make(chan string, 10000000)
+
 	for _, dir := range dirPaths {
 		pathQueue <- dir
 	}
@@ -53,12 +59,13 @@ func (fs *Filesystem) create(dirPaths []string, isMainDirs bool) {
 
 	for range config.BWSConfig.CPUThreads {
 		wg.Add(1)
-		go fs.traverse(isMainDirs, resultsChan, &wg)
+		go fs.traverse(pathQueue, isMainDirs, resultsChan, &wg)
 	}
 
 	wg.Wait()
 
 	close(resultsChan)
+	close(pathQueue)
 
 	for result := range resultsChan {
 		fs.add(result, isMainDirs)
@@ -66,7 +73,10 @@ func (fs *Filesystem) create(dirPaths []string, isMainDirs bool) {
 }
 
 // walkDir walks through the pathQueue and adds all new and valid entries into the resultsChan
-func (fs *Filesystem) traverse(isMainDirs bool, resultsChan chan<- *[][]string, wg *sync.WaitGroup) {
+func (fs *Filesystem) traverse(pathQueue chan string, isMainDirs bool, resultsChan chan<- *[][]string, wg *sync.WaitGroup) {
+	// when the queue is empty disolve the worker
+	defer wg.Done()
+
 	// loop over the queue until it's empty
 	for currentDir := range pathQueue {
 		newPaths := []string{}
@@ -129,9 +139,6 @@ func (fs *Filesystem) traverse(isMainDirs bool, resultsChan chan<- *[][]string, 
 			break
 		}
 	}
-
-	// when the queue is empty disolve the worker
-	wg.Done()
 }
 
 // add adds the newEntries to the fs
