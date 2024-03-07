@@ -134,12 +134,17 @@ func (fs *Filesystem) traverse(isMainDirs bool, resultsChan chan<- *[][]string, 
 	wg.Done()
 }
 
-func (fs *Filesystem) add(newFiles *[][]string, isMainDirs bool) {
-	if !isMainDirs {
-		return
+// add adds the newEntries to the fs
+func (fs *Filesystem) add(newEntries *[][]string, isMainDirs bool) {
+	var tempStorage map[string]map[int][][]interface{}
+
+	if isMainDirs {
+		tempStorage = fs.mainDirs
+	} else {
+		tempStorage = fs.secondaryDirs
 	}
 
-	for _, item := range *newFiles {
+	for _, item := range *newEntries {
 		itemPath := item[0]
 		itemName := item[1]
 		itemExtension := item[2]
@@ -150,17 +155,23 @@ func (fs *Filesystem) add(newFiles *[][]string, isMainDirs bool) {
 		}
 
 		// check if the file type is already stored in the fs, if not add it in
-		if _, ok := fs.mainDirs[itemExtension]; !ok {
-			fs.mainDirs[itemExtension] = make(map[int][][]interface{})
+		if _, ok := tempStorage[itemExtension]; !ok {
+			tempStorage[itemExtension] = make(map[int][][]interface{})
 		}
 
 		// check if the file length is already stored for the file extension, if not add it in
-		if _, ok := fs.mainDirs[itemExtension][len(itemName)]; !ok {
-			fs.mainDirs[itemExtension][len(itemName)] = [][]interface{}{}
+		if _, ok := tempStorage[itemExtension][len(itemName)]; !ok {
+			tempStorage[itemExtension][len(itemName)] = [][]interface{}{}
 		}
 
-		// add the file into the fs at its length with the path as a key and the name as it's value
-		fs.mainDirs[itemExtension][len(itemName)] = append(fs.mainDirs[itemExtension][len(itemName)], []interface{}{itemPath, itemName, Encode(itemName)})
+		// add the file into the fs at its length with the format: [path, name, [encoded bytes]]
+		tempStorage[itemExtension][len(itemName)] = append(tempStorage[itemExtension][len(itemName)], []interface{}{itemPath, itemName, Encode(itemName)})
+	}
+
+	if isMainDirs {
+		fs.mainDirs = tempStorage
+	} else {
+		fs.secondaryDirs = tempStorage
 	}
 }
 
