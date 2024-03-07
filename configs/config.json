@@ -15,8 +15,9 @@
         "C:/Users/<USERNAME>/AppData/LocalLow"
     ],
     "excludeDirsByName": [
-        "node_modules",
+        ".git",
         "bin",
+        "node_modules",
         "steamapps"
     ]
 }
