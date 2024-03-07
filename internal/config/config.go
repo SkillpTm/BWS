@@ -14,8 +14,10 @@ var BWSConfig *Config
 // <---------------------------------------------------------------------------------------------------->
 
 type Config struct {
+	CPUThreads         int
 	Maindirs           []string
 	ExcludeSubMainDirs []string
+	SecondaryDirs      []string
 	ExcludeDirs        []string
 	ExcludeDirsByName  []string
 }
@@ -31,17 +33,12 @@ func New() (*Config, error) {
 		return &newConfig, fmt.Errorf("couldn't open config JSON file; %s", err.Error())
 	}
 
-	index := 0
+	newConfig.CPUThreads = int(configMap["cpuThreads"].(float64))
+	delete(configMap, "cpuThreads")
 
 	// populate the newConfig with properly formated paths
-	for _, value := range configMap {
+	for key, value := range configMap {
 		newSlice := util.ConvertSliceInterface[string](value.([]interface{}))
-
-		// on index 3 we  only want the slice of strings and not format them, since they aren't paths
-		if index == 3 {
-			newConfig.ExcludeDirsByName = newSlice
-			continue
-		}
 
 		for index, element := range newSlice {
 			newSlice[index] = util.FormatEntry(element, true)
@@ -51,16 +48,18 @@ func New() (*Config, error) {
 			return &newConfig, fmt.Errorf("couldn't replace '<USERNAME>'; %s", err.Error())
 		}
 
-		switch index {
-		case 0:
+		switch key {
+		case "mainDirs":
 			newConfig.Maindirs = newSlice
-		case 1:
+		case "excludeSubMainDirs":
 			newConfig.ExcludeSubMainDirs = newSlice
-		case 2:
+		case "secondaryDirs":
+			newConfig.SecondaryDirs = newSlice
+		case "excludeDirs":
 			newConfig.ExcludeDirs = newSlice
+		case "excludeDirsByName":
+			newConfig.ExcludeDirsByName = newSlice
 		}
-
-		index++
 	}
 
 	return &newConfig, nil

@@ -1,15 +1,22 @@
 {
+    "cpuThreads": 4,
     "mainDirs": [
         "C:/Users/<USERNAME>/"
     ],
     "excludeSubMainDirs": [
-        "C:/Users/<USERNAME>/AppData/"
+        "C:/Users/<USERNAME>/AppData/Roaming"
+    ],
+    "secondaryDirs": [
+        "C:/"
     ],
     "excludeDirs": [
-
+        "C:/Windows/",
+        "C:/Users/<USERNAME>/AppData/Local",
+        "C:/Users/<USERNAME>/AppData/LocalLow"
     ],
     "excludeDirsByName": [
         "node_modules",
-        "bin"
+        "bin",
+        "steamapps"
     ]
 }
