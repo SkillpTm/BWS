@@ -21,7 +21,7 @@ func Init() error {
 		return fmt.Errorf("couldn't assign BWSConfig; %s", err.Error())
 	}
 
-	cache.EntrieFilesystem = cache.New(&config.BWSConfig.Maindirs, true)
+	cache.EntrieFilesystem = cache.New(config.BWSConfig.Maindirs, config.BWSConfig.SecondaryDirs)
 
 	return nil
 }
