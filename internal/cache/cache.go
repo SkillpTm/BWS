@@ -97,7 +97,7 @@ func (fs *Filesystem) traverse(pathQueue chan string, isMainDirs bool, resultsCh
 				entryPath := util.FormatEntry(filepath.Join(currentDir, entry.Name()), true)
 
 				// check if the current dir is an excluded name
-				if util.SliceContains[string](config.BWSConfig.ExcludeDirsByName, entry.Name()) {
+				if util.SliceContains[string](config.BWSConfig.ExcludeDirsByName, util.FormatEntry(entry.Name(), true)) {
 					continue
 				}
 
