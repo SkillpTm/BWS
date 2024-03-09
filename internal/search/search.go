@@ -6,8 +6,8 @@ package search
 import (
 	"strings"
 
-	"github.com/SkillpTm/better-windows-search/internal/cache"
-	"github.com/SkillpTm/better-windows-search/internal/util"
+	"github.com/SkillpTm/BWS/internal/cache"
+	"github.com/SkillpTm/BWS/internal/util"
 )
 
 // <---------------------------------------------------------------------------------------------------->

@@ -1,3 +1,3 @@
-module github.com/SkillpTm/better-windows-search
+module github.com/SkillpTm/BWS
 
 go 1.22

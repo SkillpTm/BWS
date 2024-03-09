@@ -6,8 +6,8 @@ package setup
 import (
 	"fmt"
 
-	"github.com/SkillpTm/better-windows-search/internal/cache"
-	"github.com/SkillpTm/better-windows-search/internal/config"
+	"github.com/SkillpTm/BWS/internal/cache"
+	"github.com/SkillpTm/BWS/internal/config"
 )
 
 // <---------------------------------------------------------------------------------------------------->
