@@ -95,7 +95,7 @@ func (searchString *SearchString) searchFS(dirs *map[string]map[int][][]interfac
 					continue
 				}
 
-				// if the searchString is inside the filename add it's path to the output
+				// if the searchString is inside the filename add it's path and name to the output
 				output = append(output, []string{file[0].(string), file[1].(string)})
 			}
 		}
