@@ -49,7 +49,7 @@ func Encode(input string) [8]byte {
 }
 
 // CompareBytes checks if all required letters form the search string are inside the searched string
-func CompareBytes(searchBytes []byte, compareBytes []byte) bool {
+func CompareBytes(searchBytes [8]byte, compareBytes [8]byte) bool {
 	// Check if all flipped bits in searchBytes are also flipped in compareBytes
 	for index := range searchBytes {
 		if searchBytes[index]&^compareBytes[index] != 0 {
