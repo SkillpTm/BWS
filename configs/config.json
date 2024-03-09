@@ -11,6 +11,7 @@
     ],
     "excludeDirs": [
         "C:/Windows/",
+        "C:/$Recycle.Bin/",
         "C:/Users/<USERNAME>/AppData/Local",
         "C:/Users/<USERNAME>/AppData/LocalLow"
     ],
