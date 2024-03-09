@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 
 	"github.com/SkillpTm/better-windows-search/internal/config"
@@ -22,13 +23,13 @@ var (
 // <---------------------------------------------------------------------------------------------------->
 
 type Filesystem struct {
-	mainDirs      map[string]map[int][][]interface{}
-	secondaryDirs map[string]map[int][][]interface{}
+	MainDirs      map[string]map[int][][]interface{}
+	SecondaryDirs map[string]map[int][][]interface{}
 }
 
 // New returns a pointer to a Filesystem struct that has been filled up according to the config file
 func New(mainDirPaths []string, secondaryDirPaths []string) *Filesystem {
-	fs := Filesystem{mainDirs: make(map[string]map[int][][]interface{}), secondaryDirs: make(map[string]map[int][][]interface{})}
+	fs := Filesystem{MainDirs: make(map[string]map[int][][]interface{}), SecondaryDirs: make(map[string]map[int][][]interface{})}
 
 	fs.create(mainDirPaths, true)
 	fs.create(secondaryDirPaths, false)
@@ -38,7 +39,7 @@ func New(mainDirPaths []string, secondaryDirPaths []string) *Filesystem {
 
 // create gets and sets the folders set to either mainDirPaths or secondaryDirPaths
 func (fs *Filesystem) create(dirPaths []string, isMainDirs bool) {
-	// if we aren't adding to the mainDirs add the excluded mainDirs directly to the queue
+	// if we aren't adding to the MainDirs add the excluded MainDirs directly to the queue
 	if !isMainDirs {
 		dirPaths = append(dirPaths, config.BWSConfig.ExcludeSubMainDirs...)
 	}
@@ -108,7 +109,7 @@ func (fs *Filesystem) traverse(pathQueue chan string, isMainDirs bool, resultsCh
 					continue
 				}
 
-				// check if we found a mainDirs folder while not mainDirs working with mainDirs
+				// check if we found a MainDirs folder while not MainDirs working with MainDirs
 				if !isMainDirs && util.SliceContains[string](config.BWSConfig.Maindirs, entryPath) {
 					continue
 				}
@@ -148,9 +149,9 @@ func (fs *Filesystem) add(newEntries *[][]string, isMainDirs bool) {
 	var tempStorage map[string]map[int][][]interface{}
 
 	if isMainDirs {
-		tempStorage = fs.mainDirs
+		tempStorage = fs.MainDirs
 	} else {
-		tempStorage = fs.secondaryDirs
+		tempStorage = fs.SecondaryDirs
 	}
 
 	for _, item := range *newEntries {
@@ -174,26 +175,26 @@ func (fs *Filesystem) add(newEntries *[][]string, isMainDirs bool) {
 		}
 
 		// add the file into the fs at its length with the format: [path, name, [encoded bytes]]
-		tempStorage[itemExtension][len(itemName)] = append(tempStorage[itemExtension][len(itemName)], []interface{}{itemPath, itemName, Encode(itemName)})
+		tempStorage[itemExtension][len(itemName)] = append(tempStorage[itemExtension][len(itemName)], []interface{}{itemPath, strings.ToLower(itemName), Encode(itemName)})
 	}
 
 	if isMainDirs {
-		fs.mainDirs = tempStorage
+		fs.MainDirs = tempStorage
 	} else {
-		fs.secondaryDirs = tempStorage
+		fs.SecondaryDirs = tempStorage
 	}
 }
 
-// WriteToFile saves mainDirs and secondaryDirs into individual jsons
+// WriteToFile saves MainDirs and SecondaryDirs into individual jsons
 func (fs *Filesystem) WriteToFile() error {
-	err := util.WriteToJSON("./cache/mainDirs.json", fs.mainDirs)
+	err := util.WriteToJSON("./cache/MainDirs.json", fs.MainDirs)
 	if err != nil {
-		return fmt.Errorf("couldn't write mainDirs to JSON; %s", err.Error())
+		return fmt.Errorf("couldn't write MainDirs to JSON; %s", err.Error())
 	}
 
-	err = util.WriteToJSON("./cache/secondaryDirs.json", fs.secondaryDirs)
+	err = util.WriteToJSON("./cache/SecondaryDirs.json", fs.SecondaryDirs)
 	if err != nil {
-		return fmt.Errorf("couldn't write secondaryDirs to JSON; %s", err.Error())
+		return fmt.Errorf("couldn't write SecondaryDirs to JSON; %s", err.Error())
 	}
 
 	return nil
