@@ -10,8 +10,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/SkillpTm/BWS/internal/config"
-	"github.com/SkillpTm/BWS/internal/util"
+	"github.com/skillptm/bws/internal/config"
+	"github.com/skillptm/bws/internal/util"
 )
 
 // <---------------------------------------------------------------------------------------------------->

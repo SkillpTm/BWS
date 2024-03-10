@@ -6,8 +6,8 @@ package setup
 import (
 	"fmt"
 
-	"github.com/SkillpTm/BWS/internal/cache"
-	"github.com/SkillpTm/BWS/internal/config"
+	"github.com/skillptm/bws/internal/cache"
+	"github.com/skillptm/bws/internal/config"
 )
 
 // <---------------------------------------------------------------------------------------------------->

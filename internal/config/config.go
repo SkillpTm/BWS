@@ -6,7 +6,7 @@ package config
 import (
 	"fmt"
 
-	"github.com/SkillpTm/BWS/internal/util"
+	"github.com/skillptm/bws/internal/util"
 )
 
 // <---------------------------------------------------------------------------------------------------->
