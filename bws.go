@@ -4,6 +4,7 @@ package bws
 // <---------------------------------------------------------------------------------------------------->
 
 import (
+	"log"
 	"time"
 
 	"github.com/skillptm/bws/internal/cache"
@@ -15,7 +16,10 @@ import (
 // <---------------------------------------------------------------------------------------------------->
 
 func init() {
-	setup.Init()
+	err := setup.Init()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	go updateCache()
 }
@@ -48,7 +52,7 @@ func updateCache() {
 // The extendedSearch flag dictates, if we search through the SecondaryDirs from the ./configs/config.json file.
 // To change the folders included/excluded in the search edit the ./configs/config.json file.
 // This function is a wrapper around the search and rank functions and returns the ranked search results at the end.
-func Search(searchString string, fileExtensions []string, extendedSearch bool) *[]string {
+func Search(searchString string, fileExtensions []string, extendedSearch bool) []string {
 	// wait for the FileSystem to be readable
 	for {
 		if cache.EntrieFilesystem.Readable {
@@ -68,5 +72,5 @@ func Search(searchString string, fileExtensions []string, extendedSearch bool) *
 	results, pattern := search.Start(search.NewSearchString(searchString, fileExtensions), extendedSearch)
 
 	// rank and sort the files
-	return search.Rank(results, pattern)
+	return *search.Rank(results, pattern)
 }
