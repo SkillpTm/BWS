@@ -14,7 +14,7 @@ var rawJSONData = []byte(`
 {
     "cpuThreads": 4,
     "mainDirs": [
-        "C:/Users/<USERNAME>/",
+        "C:/Users/<USERNAME>/"
     ],
     "excludeSubMainDirs": [
         "C:/Users/<USERNAME>/AppData/Roaming"
