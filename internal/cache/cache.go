@@ -24,20 +24,30 @@ var (
 type Filesystem struct {
 	MainDirs      map[string]map[int][][]interface{}
 	SecondaryDirs map[string]map[int][][]interface{}
+
+	Readable   bool
+	Updateable bool
 }
 
 // New returns a pointer to a Filesystem struct that has been filled up according to the config file
 func New(mainDirPaths []string, secondaryDirPaths []string) *Filesystem {
-	fs := Filesystem{MainDirs: make(map[string]map[int][][]interface{}), SecondaryDirs: make(map[string]map[int][][]interface{})}
+	fs := Filesystem{
+		MainDirs:      make(map[string]map[int][][]interface{}),
+		SecondaryDirs: make(map[string]map[int][][]interface{}),
+		Readable:      false,
+		Updateable:    false,
+	}
 
-	fs.create(mainDirPaths, true)
-	fs.create(secondaryDirPaths, false)
+	fs.Update(mainDirPaths, true)
+	fs.Update(secondaryDirPaths, false)
 
 	return &fs
 }
 
-// create gets and sets the folders set to either mainDirPaths or secondaryDirPaths
-func (fs *Filesystem) create(dirPaths []string, isMainDirs bool) {
+// Update gets and sets the folders set to either mainDirPaths or secondaryDirPaths
+func (fs *Filesystem) Update(dirPaths []string, isMainDirs bool) {
+	fs.Updateable = false
+
 	// if we aren't adding to the MainDirs add the excluded MainDirs directly to the queue
 	if !isMainDirs {
 		dirPaths = append(dirPaths, config.BWSConfig.ExcludeSubMainDirs...)
@@ -69,9 +79,25 @@ func (fs *Filesystem) create(dirPaths []string, isMainDirs bool) {
 	close(resultsChan)
 	close(pathQueue)
 
+	// make a tempFS, in case there is something on the current FS, so there'll always be a cache for the search to grab
+	tempFS := Filesystem{MainDirs: make(map[string]map[int][][]interface{}), SecondaryDirs: make(map[string]map[int][][]interface{})}
+
 	for result := range resultsChan {
-		fs.add(result, isMainDirs)
+		tempFS.add(result, isMainDirs)
 	}
+
+	// while overwritting set the state to unreadable until we're done
+	fs.Readable = false
+
+	// overwrite the old cache with the new cache
+	if isMainDirs {
+		fs.MainDirs = tempFS.MainDirs
+	} else {
+		fs.SecondaryDirs = tempFS.SecondaryDirs
+	}
+
+	fs.Readable = true
+	fs.Updateable = true
 }
 
 // walkDir walks through the pathQueue and adds all new and valid entries into the resultsChan
