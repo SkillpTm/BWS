@@ -20,15 +20,8 @@ type SearchString struct {
 	name       string
 }
 
-// Start wrapps around the search and rank functions and returns the ranked search results at the end
-func Start(searchString string, fileExtensions []string, extendedSearch bool) *[]string {
-	results, pattern := search(newSearchString(searchString, fileExtensions), extendedSearch)
-
-	return rank(results, pattern)
-}
-
-// newSearchString returns a pointer to a SearchString struct based on the string input
-func newSearchString(searchString string, fileExtensions []string) *SearchString {
+// NewSearchString returns a pointer to a SearchString struct based on the string input
+func NewSearchString(searchString string, fileExtensions []string) *SearchString {
 	// make sure all extensions begin with a period, unless it's a "File" or a "Folder"
 	for index, element := range fileExtensions {
 		if string(element[0]) != "." && element != "File" && element != "Folder" {
@@ -50,8 +43,8 @@ func newSearchString(searchString string, fileExtensions []string) *SearchString
 	}
 }
 
-// search wraps around the walkFS function and returns all the results from the MainDirs and SecondaryDirs
-func search(pattern *SearchString, extendedSearch bool) (*[][]string, *SearchString) {
+// Start wraps around the walkFS function and returns all the results from the MainDirs and SecondaryDirs
+func Start(pattern *SearchString, extendedSearch bool) (*[][]string, *SearchString) {
 	output := [][]string{}
 
 	// check the MainDirs for the search string

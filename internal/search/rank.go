@@ -56,8 +56,8 @@ func newRankedFile(fileInfo fs.FileInfo, file []string, pattern *SearchString) *
 	return &newFile
 }
 
-// rank ranks and sorts the results
-func rank(searchResults *[][]string, pattern *SearchString) *[]string {
+// Rank ranks and sorts the results
+func Rank(searchResults *[][]string, pattern *SearchString) *[]string {
 	output := []string{}
 	rankedFiles := []RankedFile{}
 
