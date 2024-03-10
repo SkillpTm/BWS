@@ -4,7 +4,6 @@ package cache
 // <---------------------------------------------------------------------------------------------------->
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -183,19 +182,4 @@ func (fs *Filesystem) add(newEntries *[][]string, isMainDirs bool) {
 	} else {
 		fs.SecondaryDirs = tempStorage
 	}
-}
-
-// WriteToFile saves MainDirs and SecondaryDirs into individual jsons
-func (fs *Filesystem) WriteToFile() error {
-	err := util.WriteToJSON("./cache/MainDirs.json", fs.MainDirs)
-	if err != nil {
-		return fmt.Errorf("couldn't write MainDirs to JSON; %s", err.Error())
-	}
-
-	err = util.WriteToJSON("./cache/SecondaryDirs.json", fs.SecondaryDirs)
-	if err != nil {
-		return fmt.Errorf("couldn't write SecondaryDirs to JSON; %s", err.Error())
-	}
-
-	return nil
 }
