@@ -6,6 +6,7 @@ package config
 import (
 	"fmt"
 
+	defaultconfig "github.com/skillptm/bws/configs"
 	"github.com/skillptm/bws/internal/util"
 )
 
@@ -30,9 +31,9 @@ type Config struct {
 func New() (*Config, error) {
 	newConfig := Config{}
 
-	configMap, err := util.GetJSONData("./configs/config.json")
+	configMap, err := defaultconfig.Get()
 	if err != nil {
-		return &newConfig, fmt.Errorf("couldn't open config JSON file; %s", err.Error())
+		return &newConfig, fmt.Errorf("couldn't get JSON config data; %s", err.Error())
 	}
 
 	newConfig.CPUThreads = int(configMap["cpuThreads"].(float64))
