@@ -8,8 +8,6 @@ import (
 	"math"
 	"runtime"
 
-	"github.com/skillptm/ssl/pkg/sslslices"
-
 	"github.com/skillptm/bws/internal/util"
 )
 
@@ -59,12 +57,12 @@ type Config struct {
 func New(configMap map[string]interface{}) (*Config, error) {
 	newConfig := Config{}
 
-	newConfig.CPUThreads = int(configMap["cpuThreads"].(float64))
+	newConfig.CPUThreads = configMap["cpuThreads"].(int)
 	delete(configMap, "cpuThreads")
 
 	// populate the newConfig with properly formated paths
 	for key, value := range configMap {
-		newSlice := sslslices.ConvertInterface[string](value.([]interface{}))
+		newSlice := value.([]string)
 
 		for index, element := range newSlice {
 			newSlice[index] = util.FormatEntry(element, true)
