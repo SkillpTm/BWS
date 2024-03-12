@@ -29,13 +29,13 @@ func NewSearchString(searchString string, fileExtensions []string) *SearchString
 			continue
 		}
 
-		if string(element[0]) != "." && element != "File" && element != "Folder" {
+		if !strings.HasPrefix(element, ".") && element != "File" && element != "Folder" {
 			fileExtensions[index] = "." + element
 			continue
 		}
 
 		// ensure "File"/"Folder" have the right case
-		if string(element[0]) != "f" {
+		if element == "file" || element == "folder" {
 			fileExtensions[index] = "F" + element[1:]
 		}
 	}
