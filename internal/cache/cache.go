@@ -16,7 +16,7 @@ import (
 // <---------------------------------------------------------------------------------------------------->
 
 var (
-	EntrieFilesystem *Filesystem
+	EntrieFilesystem *Filesystem = &Filesystem{SetupProperly: false}
 )
 
 // <---------------------------------------------------------------------------------------------------->
@@ -25,8 +25,9 @@ type Filesystem struct {
 	MainDirs      map[string]map[int][][]interface{}
 	SecondaryDirs map[string]map[int][][]interface{}
 
-	Readable   bool
-	Updateable bool
+	SetupProperly bool
+	Readable      bool
+	Updateable    bool
 }
 
 // New returns a pointer to a Filesystem struct that has been filled up according to the config file
@@ -34,6 +35,7 @@ func New(mainDirPaths []string, secondaryDirPaths []string) *Filesystem {
 	fs := Filesystem{
 		MainDirs:      make(map[string]map[int][][]interface{}),
 		SecondaryDirs: make(map[string]map[int][][]interface{}),
+		SetupProperly: false,
 		Readable:      false,
 		Updateable:    false,
 	}
@@ -135,7 +137,7 @@ func (fs *Filesystem) traverse(pathQueue chan string, isMainDirs bool, resultsCh
 				}
 
 				// check if we found a MainDirs folder while not MainDirs working with MainDirs
-				if !isMainDirs && util.SliceContains[string](config.BWSConfig.Maindirs, entryPath) {
+				if !isMainDirs && util.SliceContains[string](config.BWSConfig.MainDirs, entryPath) {
 					continue
 				}
 
