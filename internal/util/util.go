@@ -11,17 +11,6 @@ import (
 
 // <---------------------------------------------------------------------------------------------------->
 
-// ConvertSliceInterface converts a []interface{} to a slice of any type
-func ConvertSliceInterface[T comparable](sliceInput []interface{}) []T {
-	newSlice := []T{}
-
-	for _, item := range sliceInput {
-		newSlice = append(newSlice, item.(T))
-	}
-
-	return newSlice
-}
-
 // InsertUsername replaces <USERNAME> in any path to the actual username of the current user
 func InsertUsername(pathInputs []string) ([]string, error) {
 	// Get the current user for their name
