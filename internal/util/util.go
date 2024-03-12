@@ -1,4 +1,4 @@
-// Package util ...
+// Package util carries smaller utility functions that can be reused over the whole project.
 package util
 
 // <---------------------------------------------------------------------------------------------------->

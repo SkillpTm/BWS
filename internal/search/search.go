@@ -1,4 +1,4 @@
-// Package search ...
+// Package search handles the search through the cache and the ranking of the results.
 package search
 
 // <---------------------------------------------------------------------------------------------------->

@@ -1,4 +1,4 @@
-// Package config ...
+// Package config handles the generation of a new config with the modules default values.
 package config
 
 // <---------------------------------------------------------------------------------------------------->

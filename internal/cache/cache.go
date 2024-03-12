@@ -1,4 +1,4 @@
-// Package cache ...
+// Package cache handles everything that has to do with the generation of the cache for the Search function.
 package cache
 
 // <---------------------------------------------------------------------------------------------------->
