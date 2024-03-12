@@ -4,6 +4,7 @@ package bws
 // <---------------------------------------------------------------------------------------------------->
 
 import (
+	"log"
 	"time"
 
 	"github.com/skillptm/bws/internal/cache"
@@ -15,6 +16,12 @@ import (
 
 // init executes as soon as bws is imported into another project and launches a goroutine of updateCache
 func init() {
+	var err error
+	config.BWSConfig, err = config.New(config.DefaultConfig)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	go updateCache()
 }
 
@@ -63,6 +70,7 @@ func Search(searchString string, fileExtensions []string, extendedSearch bool) [
 	// check if the FileSystem is setup properly, if not reset it by regenerating it
 	if !cache.EntrieFilesystem.SetupProperly {
 		cache.EntrieFilesystem = cache.New(config.BWSConfig.MainDirs, config.BWSConfig.SecondaryDirs)
+		cache.EntrieFilesystem.SetupProperly = true
 	}
 
 	// wait for the FileSystem to be readable
