@@ -9,6 +9,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/skillptm/ssl/pkg/sslslices"
+
 	"github.com/skillptm/bws/internal/config"
 	"github.com/skillptm/bws/internal/util"
 )
@@ -127,22 +129,22 @@ func (fs *Filesystem) traverse(pathQueue chan string, isMainDirs bool, resultsCh
 				entryPath := util.FormatEntry(filepath.Join(currentDir, entry.Name()), true)
 
 				// check if the current dir is an excluded name
-				if util.SliceContains[string](config.BWSConfig.ExcludeDirsByName, util.FormatEntry(entry.Name(), true)) {
+				if sslslices.Contains[string](config.BWSConfig.ExcludeDirsByName, util.FormatEntry(entry.Name(), true)) {
 					continue
 				}
 
 				// check if the dir is excluded
-				if util.SliceContains[string](config.BWSConfig.ExcludeDirs, entryPath) {
+				if sslslices.Contains[string](config.BWSConfig.ExcludeDirs, entryPath) {
 					continue
 				}
 
 				// check if we found a MainDirs folder while not MainDirs working with MainDirs
-				if !isMainDirs && util.SliceContains[string](config.BWSConfig.MainDirs, entryPath) {
+				if !isMainDirs && sslslices.Contains[string](config.BWSConfig.MainDirs, entryPath) {
 					continue
 				}
 
 				// check if the dir is in the excluded main dirs
-				if isMainDirs && util.SliceContains[string](config.BWSConfig.ExcludeSubMainDirs, entryPath) {
+				if isMainDirs && sslslices.Contains[string](config.BWSConfig.ExcludeSubMainDirs, entryPath) {
 					continue
 				}
 

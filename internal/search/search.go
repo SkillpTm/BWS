@@ -6,8 +6,9 @@ package search
 import (
 	"strings"
 
+	"github.com/skillptm/ssl/pkg/sslslices"
+
 	"github.com/skillptm/bws/internal/cache"
-	"github.com/skillptm/bws/internal/util"
 )
 
 // <---------------------------------------------------------------------------------------------------->
@@ -69,7 +70,7 @@ func (searchString *SearchString) searchFS(dirs *map[string]map[int][][]interfac
 	// loop over the extensions
 	for extenion, lengthMaps := range *dirs {
 		// check if extensions were provided and if so, if the current extension is a provided one
-		if len(searchString.extensions) > 0 && !util.SliceContains[string](searchString.extensions, extenion) {
+		if len(searchString.extensions) > 0 && !sslslices.Contains[string](searchString.extensions, extenion) {
 			continue
 		}
 

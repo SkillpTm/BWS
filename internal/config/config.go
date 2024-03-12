@@ -8,6 +8,8 @@ import (
 	"math"
 	"runtime"
 
+	"github.com/skillptm/ssl/pkg/sslslices"
+
 	"github.com/skillptm/bws/internal/util"
 )
 
@@ -65,7 +67,7 @@ func New(configMap map[string]interface{}) (*Config, error) {
 
 	// populate the newConfig with properly formated paths
 	for key, value := range configMap {
-		newSlice := util.ConvertSliceInterface[string](value.([]interface{}))
+		newSlice := sslslices.ConvertInterface[string](value.([]interface{}))
 
 		for index, element := range newSlice {
 			newSlice[index] = util.FormatEntry(element, true)
