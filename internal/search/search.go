@@ -68,9 +68,9 @@ func (searchString *SearchString) searchFS(dirs *map[string]map[int][][]interfac
 	output := [][]string{}
 
 	// loop over the extensions
-	for extenion, lengthMaps := range *dirs {
+	for extension, lengthMaps := range *dirs {
 		// check if extensions were provided and if so, if the current extension is a provided one
-		if len(searchString.extensions) > 0 && !sslslices.Contains[string](searchString.extensions, extenion) {
+		if len(searchString.extensions) > 0 && !sslslices.Contains[string](searchString.extensions, extension) {
 			continue
 		}
 

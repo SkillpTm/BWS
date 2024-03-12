@@ -1,4 +1,4 @@
-// Package bws containes the main Search function and start up logic of bws.
+// Package bws contains the main Search function and start up logic of bws.
 package bws
 
 // <---------------------------------------------------------------------------------------------------->
@@ -25,7 +25,7 @@ func init() {
 	go updateCache()
 }
 
-// updateCache updates with teh use of tickers both the MainDirs and the SecondaryDirs
+// updateCache updates with the use of tickers both the MainDirs and the SecondaryDirs
 func updateCache() {
 	// create tickers for how often the FileSystem components are supossed to update
 	mainDirsTicker := time.NewTicker(3 * time.Minute)
