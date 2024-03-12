@@ -66,7 +66,7 @@ SetMainDirs allows you to set the MainDirs for the config that controls the cach
 
 Using this function will cause the cache to regenerate before the next bws.Search execution.
 
-By default this valus is "C:/".
+By default this valus is "C:/Users/<USERNAME>/".
 */
 func SetMainDirs(newDirs []string) error {
 	if len(newDirs) < 1 {
@@ -108,7 +108,7 @@ These folders will only be search through, when setting the extenedSearch flag i
 
 Using this function will cause the cache to regenerate before the next bws.Search execution.
 
-By default this valus is empty.
+By default this valus is "C:/".
 */
 func SetSecondaryDirs(newDirs []string) error {
 	err := setConfigDirs("SecondaryDirs", newDirs)
