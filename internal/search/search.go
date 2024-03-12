@@ -24,6 +24,10 @@ type SearchString struct {
 func NewSearchString(searchString string, fileExtensions []string) *SearchString {
 	// make sure all extensions begin with a period, unless it's a "File" or a "Folder"
 	for index, element := range fileExtensions {
+		if len(element) < 1 {
+			continue
+		}
+
 		if string(element[0]) != "." && element != "File" && element != "Folder" {
 			fileExtensions[index] = "." + element
 			continue
