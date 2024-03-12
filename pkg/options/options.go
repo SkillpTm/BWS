@@ -11,6 +11,7 @@ import (
 
 	"github.com/skillptm/bws/internal/cache"
 	"github.com/skillptm/bws/internal/config"
+	"github.com/skillptm/bws/internal/util"
 )
 
 // <---------------------------------------------------------------------------------------------------->
@@ -36,6 +37,15 @@ func SetCPUThreads(threads int) error {
 
 // setConfigDirs checks if all provided folders exist and then sets them to the correct attribute of BWSConfig
 func setConfigDirs(configType string, newDirs []string) error {
+	// properly format the provided paths
+	for index, element := range newDirs {
+		newDirs[index] = util.FormatEntry(element, true)
+	}
+	newDirs, err := util.InsertUsername(newDirs)
+	if err != nil {
+		return fmt.Errorf("couldn't replace '<USERNAME>'; %s", err.Error())
+	}
+
 	//check if all dirs prvoided exist and aren't a file
 	for _, dir := range newDirs {
 		if fileInfo, err := os.Stat(dir); err != nil {
