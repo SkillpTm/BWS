@@ -10,7 +10,8 @@ The cache is seperated in 2 different maps: MainDirs and SecondaryDirs. MainDirs
 
 There is a default config that you can update with the set functions in ./pkg/options. The default config looks liké this (it's not actually in a JSON):
 ```jsonc
-	"cpuThreads": // this is set to the rounded up integer of 1/4 of your CPU threads
+{
+	"cpuThreads": "1/4 of threads (int)", // this is set to the rounded up integer of 1/4 of your CPU threads
 	"mainDirs": [
 		"C:/Users/<USERNAME>/" // all instances of <USERNAME> get automatically repleased by the module, you can insert it like this too
     ],
@@ -31,7 +32,8 @@ There is a default config that you can update with the set functions in ./pkg/op
 		"bin",
 		"node_modules",
 		"steamapps"
-    ],
+    ]
+}
 ```
 
 ## Usage:
