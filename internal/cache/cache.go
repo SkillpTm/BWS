@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/skillptm/ssl/pkg/sslslices"
 
@@ -72,16 +73,18 @@ func (fs *Filesystem) Update(dirPaths []string, isMainDirs bool) {
 
 	// 10000000 is the channel size, because we just need a ridiculously large channel to store all the results until we add them to the fs
 	resultsChan := make(chan *[][]string, 10000000)
+	breakChan := make(chan bool, config.BWSConfig.CPUThreads*config.BWSConfig.CPUThreads)
 
 	for range config.BWSConfig.CPUThreads {
 		wg.Add(1)
-		go fs.traverse(pathQueue, isMainDirs, resultsChan, &wg)
+		go fs.traverse(isMainDirs, pathQueue, resultsChan, breakChan, &wg)
 	}
 
 	wg.Wait()
 
 	close(resultsChan)
 	close(pathQueue)
+	close(breakChan)
 
 	// make a tempFS, in case there is something on the current FS, so there'll always be a cache for the search to grab
 	tempFS := Filesystem{MainDirs: make(map[string]map[int][][]interface{}), SecondaryDirs: make(map[string]map[int][][]interface{})}
@@ -105,70 +108,80 @@ func (fs *Filesystem) Update(dirPaths []string, isMainDirs bool) {
 }
 
 // walkDir walks through the pathQueue and adds all new and valid entries into the resultsChan
-func (fs *Filesystem) traverse(pathQueue chan string, isMainDirs bool, resultsChan chan<- *[][]string, wg *sync.WaitGroup) {
+func (fs *Filesystem) traverse(isMainDirs bool, pathQueue chan string, resultsChan chan<- *[][]string, breakChan chan bool, wg *sync.WaitGroup) {
 	// when the queue is empty disolve the worker
 	defer wg.Done()
 
-	// loop over the queue until it's empty
-	for currentDir := range pathQueue {
-		newPaths := []string{}
-		newEntries := [][]string{}
+	for {
+		select {
+		// loop over the queue until it's empty
+		case currentDir := <-pathQueue:
+			time.Sleep(1 * time.Second)
+			newPaths := []string{}
+			newEntries := [][]string{}
 
-		currentEntries, err := os.ReadDir(currentDir)
-		if err != nil {
-			// an error here simply means we didn't have the permissions to read a dir, so we ignore it
+			currentEntries, err := os.ReadDir(currentDir)
+			if err != nil {
+				// an error here simply means we didn't have the permissions to read a dir, so we ignore it
+				if len(pathQueue) < 1 {
+					break
+				}
+
+				continue
+			}
+
+			for _, entry := range currentEntries {
+				if entry.IsDir() {
+					entryPath := util.FormatEntry(filepath.Join(currentDir, entry.Name()), true)
+
+					// check if the current dir is an excluded name
+					if sslslices.Contains[string](config.BWSConfig.ExcludeDirsByName, util.FormatEntry(entry.Name(), true)) {
+						continue
+					}
+
+					// check if the dir is excluded
+					if sslslices.Contains[string](config.BWSConfig.ExcludeDirs, entryPath) {
+						continue
+					}
+
+					// check if we found a MainDirs folder while not MainDirs working with MainDirs
+					if !isMainDirs && sslslices.Contains[string](config.BWSConfig.MainDirs, entryPath) {
+						continue
+					}
+
+					// check if the dir is in the excluded main dirs
+					if isMainDirs && sslslices.Contains[string](config.BWSConfig.ExcludeSubMainDirs, entryPath) {
+						continue
+					}
+
+					newPaths = append(newPaths, entryPath)
+					newEntries = append(newEntries, []string{entryPath, entry.Name(), "Folder"})
+				} else {
+					entryPath := util.FormatEntry(filepath.Join(currentDir, entry.Name()), false)
+
+					fileExtension := filepath.Ext(entry.Name())
+					if len(fileExtension) < 1 {
+						fileExtension = "File"
+					}
+					newEntries = append(newEntries, []string{entryPath, entry.Name(), fileExtension})
+				}
+			}
+
+			for _, path := range newPaths {
+				pathQueue <- path
+			}
+
+			resultsChan <- &newEntries
+
 			if len(pathQueue) < 1 {
-				break
+				for range config.BWSConfig.CPUThreads {
+					breakChan <- true
+				}
+				return
 			}
 
-			continue
-		}
-
-		for _, entry := range currentEntries {
-			if entry.IsDir() {
-				entryPath := util.FormatEntry(filepath.Join(currentDir, entry.Name()), true)
-
-				// check if the current dir is an excluded name
-				if sslslices.Contains[string](config.BWSConfig.ExcludeDirsByName, util.FormatEntry(entry.Name(), true)) {
-					continue
-				}
-
-				// check if the dir is excluded
-				if sslslices.Contains[string](config.BWSConfig.ExcludeDirs, entryPath) {
-					continue
-				}
-
-				// check if we found a MainDirs folder while not MainDirs working with MainDirs
-				if !isMainDirs && sslslices.Contains[string](config.BWSConfig.MainDirs, entryPath) {
-					continue
-				}
-
-				// check if the dir is in the excluded main dirs
-				if isMainDirs && sslslices.Contains[string](config.BWSConfig.ExcludeSubMainDirs, entryPath) {
-					continue
-				}
-
-				newPaths = append(newPaths, entryPath)
-				newEntries = append(newEntries, []string{entryPath, entry.Name(), "Folder"})
-			} else {
-				entryPath := util.FormatEntry(filepath.Join(currentDir, entry.Name()), false)
-
-				fileExtension := filepath.Ext(entry.Name())
-				if len(fileExtension) < 1 {
-					fileExtension = "File"
-				}
-				newEntries = append(newEntries, []string{entryPath, entry.Name(), fileExtension})
-			}
-		}
-
-		for _, path := range newPaths {
-			pathQueue <- path
-		}
-
-		resultsChan <- &newEntries
-
-		if len(pathQueue) < 1 {
-			break
+		case <-breakChan:
+			return
 		}
 	}
 }

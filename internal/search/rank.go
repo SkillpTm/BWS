@@ -65,11 +65,16 @@ func Rank(searchResults *[][]string, pattern *SearchString) *[]string {
 	output := []string{}
 	rankedFiles := []RankedFile{}
 
+	if len(*searchResults) < 1 {
+		return &output
+	}
+
 	var wg sync.WaitGroup
 
 	// 10000000 is the channel size, because we just need a ridiculously large channel to store all the results
 	toRankChan := make(chan *[]string, 10000000)
 	rankedChan := make(chan *RankedFile, 10000000)
+	breakChan := make(chan bool, config.BWSConfig.CPUThreads*config.BWSConfig.CPUThreads)
 
 	// we add all the results in the channel before starting the goroutines to avoid race conditions
 	for _, file := range *searchResults {
@@ -78,13 +83,14 @@ func Rank(searchResults *[][]string, pattern *SearchString) *[]string {
 
 	for range config.BWSConfig.CPUThreads {
 		wg.Add(1)
-		go rankResults(toRankChan, rankedChan, pattern, &wg)
+		go rankResults(toRankChan, rankedChan, breakChan, pattern, &wg)
 	}
 
 	wg.Wait()
 
 	close(toRankChan)
 	close(rankedChan)
+	close(breakChan)
 
 	for file := range rankedChan {
 		rankedFiles = append(rankedFiles, *file)
@@ -102,19 +108,28 @@ func Rank(searchResults *[][]string, pattern *SearchString) *[]string {
 }
 
 // rankResults takes the results from toRankChan, ranks them and inserts a pointer to them into rankedChan
-func rankResults(toRankChan <-chan *[]string, rankedChan chan<- *RankedFile, pattern *SearchString, wg *sync.WaitGroup) {
+func rankResults(toRankChan <-chan *[]string, rankedChan chan<- *RankedFile, breakChan chan bool, pattern *SearchString, wg *sync.WaitGroup) {
 	defer wg.Done()
 
-	for file := range toRankChan {
-		fileInfo, err := os.Stat((*file)[0])
-		if err != nil {
-			// if we error it's most likely the file doesn't exist anymore, so we skip it
-			continue
-		}
+	for {
+		select {
+		case file := <-toRankChan:
+			fileInfo, err := os.Stat((*file)[0])
+			if err != nil {
+				// if we error it's most likely the file doesn't exist anymore, so we skip it
+				continue
+			}
 
-		rankedChan <- newRankedFile(fileInfo, *file, pattern)
+			rankedChan <- newRankedFile(fileInfo, *file, pattern)
 
-		if len(toRankChan) < 1 {
+			if len(toRankChan) < 1 {
+				for range config.BWSConfig.CPUThreads {
+					breakChan <- true
+				}
+				return
+			}
+
+		case <-breakChan:
 			return
 		}
 	}
