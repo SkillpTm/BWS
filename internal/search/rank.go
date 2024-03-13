@@ -5,7 +5,10 @@ import (
 	"io/fs"
 	"math"
 	"os"
+	"sync"
 	"time"
+
+	"github.com/skillptm/bws/internal/config"
 )
 
 const (
@@ -62,27 +65,59 @@ func Rank(searchResults *[][]string, pattern *SearchString) *[]string {
 	output := []string{}
 	rankedFiles := []RankedFile{}
 
-	// rank all the results and order them
-	for _, file := range *searchResults {
-		fileInfo, err := os.Stat(file[0])
-		if err != nil {
-			// if we error it's most likely the file doesn't exist anymore, so we skip it
-			continue
-		}
+	var wg sync.WaitGroup
 
-		// rank the file
-		rankedFiles = append(rankedFiles, *newRankedFile(fileInfo, file, pattern))
+	// 10000000 is the channel size, because we just need a ridiculously large channel to store all the results
+	toRankChan := make(chan *[]string, 10000000)
+	rankedChan := make(chan *RankedFile, 10000000)
+
+	// we add all the results in the channel before starting the goroutines to avoid race conditions
+	for _, file := range *searchResults {
+		toRankChan <- &file
+	}
+
+	for range config.BWSConfig.CPUThreads {
+		wg.Add(1)
+		go rankResults(toRankChan, rankedChan, pattern, &wg)
+	}
+
+	wg.Wait()
+
+	close(toRankChan)
+	close(rankedChan)
+
+	for file := range rankedChan {
+		rankedFiles = append(rankedFiles, *file)
 	}
 
 	// sort the results
 	quickSort(rankedFiles)
 
 	// put the ranked and sorted paths onto the output
-	for index := range rankedFiles {
-		output = append(output, rankedFiles[index].path)
+	for _, file := range rankedFiles {
+		output = append(output, file.path)
 	}
 
 	return &output
+}
+
+// rankResults takes the results from toRankChan, ranks them and inserts a pointer to them into rankedChan
+func rankResults(toRankChan <-chan *[]string, rankedChan chan<- *RankedFile, pattern *SearchString, wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	for file := range toRankChan {
+		fileInfo, err := os.Stat((*file)[0])
+		if err != nil {
+			// if we error it's most likely the file doesn't exist anymore, so we skip it
+			continue
+		}
+
+		rankedChan <- newRankedFile(fileInfo, *file, pattern)
+
+		if len(toRankChan) < 1 {
+			return
+		}
+	}
 }
 
 // quickSort is an implmentation of the quick sort alogirthm that sorts our ranked files based on their points
