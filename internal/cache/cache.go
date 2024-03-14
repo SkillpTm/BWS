@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/skillptm/ssl/pkg/sslslices"
 
@@ -116,7 +115,6 @@ func (fs *Filesystem) traverse(isMainDirs bool, pathQueue chan string, resultsCh
 		select {
 		// loop over the queue until it's empty
 		case currentDir := <-pathQueue:
-			time.Sleep(1 * time.Second)
 			newPaths := []string{}
 			newEntries := [][]string{}
 
