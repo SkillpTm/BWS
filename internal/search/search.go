@@ -26,17 +26,20 @@ func NewSearchString(searchString string, fileExtensions []string) *SearchString
 	// make sure all extensions begin with a period, unless it's a "File" or a "Folder"
 	for index, element := range fileExtensions {
 		if len(element) < 1 {
-			continue
-		}
-
-		if !strings.HasPrefix(element, ".") && element != "File" && element != "Folder" {
-			fileExtensions[index] = "." + element
+			// pop empty strings
+			fileExtensions = append(fileExtensions[:index], fileExtensions[index+1:]...)
 			continue
 		}
 
 		// ensure "File"/"Folder" have the right case
 		if element == "file" || element == "folder" {
 			fileExtensions[index] = "F" + element[1:]
+			element = "F" + element[1:]
+		}
+
+		if !strings.HasPrefix(element, ".") && element != "File" && element != "Folder" {
+			fileExtensions[index] = "." + element
+			continue
 		}
 	}
 
