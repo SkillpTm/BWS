@@ -52,22 +52,22 @@ func NewSearchString(searchString string, fileExtensions []string) *SearchString
 }
 
 // Start wraps around the walkFS function and returns all the results from the MainDirs and SecondaryDirs
-func Start(pattern *SearchString, extendedSearch bool) (*[][]string, *SearchString) {
+func Start(pattern *SearchString, extendedSearch bool, forceStopChan chan bool) (*[][]string, *SearchString) {
 	output := [][]string{}
 
 	// check the MainDirs for the search string
-	output = append(output, *pattern.searchFS(&cache.EntrieFilesystem.MainDirs)...)
+	output = append(output, *pattern.searchFS(&cache.EntrieFilesystem.MainDirs, forceStopChan)...)
 
 	// check the SecondaryDirs for the search string
 	if extendedSearch {
-		output = append(output, *pattern.searchFS(&cache.EntrieFilesystem.SecondaryDirs)...)
+		output = append(output, *pattern.searchFS(&cache.EntrieFilesystem.SecondaryDirs, forceStopChan)...)
 	}
 
 	return &output, pattern
 }
 
 // searchFS searches one of the provided FileSystem maps, while skiping files for wrong extensions and ecoded values
-func (searchString *SearchString) searchFS(dirs *map[string]map[int][][]interface{}) *[][]string {
+func (searchString *SearchString) searchFS(dirs *map[string]map[int][][]interface{}, forceStopChan chan bool) *[][]string {
 	output := [][]string{}
 
 	// loop over the extensions
@@ -86,6 +86,11 @@ func (searchString *SearchString) searchFS(dirs *map[string]map[int][][]interfac
 
 			// loop over the actual files
 			for _, file := range fileSlices {
+				// check if we have to stop the baseSearch
+				if len(forceStopChan) > 0 {
+					return &output
+				}
+
 				// check if all required letters are inside the filename
 				if !cache.CompareBytes(searchString.encoded, file[2].([8]byte)) {
 					continue

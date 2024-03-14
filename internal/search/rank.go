@@ -61,7 +61,7 @@ func newRankedFile(fileInfo fs.FileInfo, file []string, pattern *SearchString) *
 }
 
 // Rank ranks and sorts the results
-func Rank(searchResults *[][]string, pattern *SearchString) *[]string {
+func Rank(searchResults *[][]string, pattern *SearchString, forceStopChan chan bool) *[]string {
 	output := []string{}
 	rankedFiles := []RankedFile{}
 
@@ -83,7 +83,7 @@ func Rank(searchResults *[][]string, pattern *SearchString) *[]string {
 
 	for range config.BWSConfig.CPUThreads {
 		wg.Add(1)
-		go rankResults(toRankChan, rankedChan, breakChan, pattern, &wg)
+		go rankResults(toRankChan, rankedChan, breakChan, pattern, &wg, forceStopChan)
 	}
 
 	wg.Wait()
@@ -91,6 +91,11 @@ func Rank(searchResults *[][]string, pattern *SearchString) *[]string {
 	close(toRankChan)
 	close(rankedChan)
 	close(breakChan)
+
+	// check if we have to stop the baseSearch
+	if len(forceStopChan) > 0 {
+		return &output
+	}
 
 	for file := range rankedChan {
 		rankedFiles = append(rankedFiles, *file)
@@ -108,12 +113,17 @@ func Rank(searchResults *[][]string, pattern *SearchString) *[]string {
 }
 
 // rankResults takes the results from toRankChan, ranks them and inserts a pointer to them into rankedChan
-func rankResults(toRankChan <-chan *[]string, rankedChan chan<- *RankedFile, breakChan chan bool, pattern *SearchString, wg *sync.WaitGroup) {
+func rankResults(toRankChan <-chan *[]string, rankedChan chan<- *RankedFile, breakChan chan bool, pattern *SearchString, wg *sync.WaitGroup, forceStopChan chan bool) {
 	defer wg.Done()
 
 	for {
 		select {
 		case file := <-toRankChan:
+			// check if we have to stop the baseSearch
+			if len(forceStopChan) > 0 {
+				return
+			}
+
 			fileInfo, err := os.Stat((*file)[0])
 			if err != nil {
 				// if we error it's most likely the file doesn't exist anymore, so we skip it

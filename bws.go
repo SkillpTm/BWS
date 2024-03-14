@@ -59,14 +59,11 @@ func updateCache() {
 }
 
 /*
-Search takes in any substring that you want to search for through all filenames. You may add any amount of file extensions as well.
-The extendedSearch flag dictates, if we search through the SecondaryDirs.
-To change the folders included/excluded in the search use the pkg/options set functions.
-This function is a wrapper around the search and rank functions and returns the ranked search results at the end.
+baseSearch is a wrapper around the search and rank functions and returns the ranked search results at the end.
 
-On it's first execution the function will take longer, as it needs to generate the cache first.
+Additionally if baseSearch was launched by GoSearchWithBreak it can be stopped at any point with the forceStopChan
 */
-func Search(searchString string, fileExtensions []string, extendedSearch bool) []string {
+func baseSearch(searchString string, fileExtensions []string, extendedSearch bool, forceStopChan chan bool) []string {
 	// check if the FileSystem is setup properly, if not reset it by regenerating it
 	if !cache.EntrieFilesystem.SetupProperly {
 		ForceUpdateCache()
@@ -88,10 +85,53 @@ func Search(searchString string, fileExtensions []string, extendedSearch bool) [
 	}()
 
 	// get the filepaths and names
-	results, pattern := search.Start(search.NewSearchString(searchString, fileExtensions), extendedSearch)
+	results, pattern := search.Start(search.NewSearchString(searchString, fileExtensions), extendedSearch, forceStopChan)
+
+	// check if we have to stop the baseSearch
+	if len(forceStopChan) > 0 {
+		return []string{}
+	}
+
+	output := *search.Rank(results, pattern, forceStopChan)
+
+	// check if we have to stop the baseSearch
+	if len(forceStopChan) > 0 {
+		return []string{}
+	}
 
 	// rank and sort the files
-	return *search.Rank(results, pattern)
+	return output
+}
+
+/*
+Search takes in any substring that you want to search for through all filenames. You may add any amount of file extensions as well.
+The extendedSearch flag dictates, if we search through the SecondaryDirs.
+To change the folders included/excluded in the search use the pkg/options set functions.
+
+On it's first execution the function will take longer, as it needs to generate the cache first.
+*/
+func Search(searchString string, fileExtensions []string, extendedSearch bool) []string {
+	return baseSearch(searchString, fileExtensions, extendedSearch, make(chan bool, 1)) // insert a dummy channel, as it's not needed here
+}
+
+/*
+GoSearchWithBreak behaves exactly like Search, the only difference is, it requires a break channel as an input.
+
+This function should be started as a goroutine and it can be cancelled early by sending something in the breakChan.
+*/
+func GoSearchWithBreak(searchString string, fileExtensions []string, extendedSearch bool, breakChan chan bool) []string {
+	forceStopChan := make(chan bool, 1)
+
+	go func() {
+		// check for when we receive the break signal
+		for range breakChan {
+			close(breakChan)
+			// send something into the foreStopChan to stop the baseSearch
+			forceStopChan <- true
+		}
+	}()
+
+	return baseSearch(searchString, fileExtensions, extendedSearch, forceStopChan)
 }
 
 /*
