@@ -38,7 +38,11 @@ There is a default config that you can update with the set functions in ./pkg/op
 
 ## Usage:
 
-The module has only the set funtions in pkg/options to update the config and the bws.Search function.
+The only functions in this module are:
+- bws.Search: Used for a regular search
+- bws.GoSearchWithBreak: The same as Search, just with the option of ending it early (which will cause you receiving an empty result)
+- bws.ForceUpdateCache: No matter the circumstances updates the cache.
+- The Set functions inside pkg/options used to change the modules config.
 
 ### Example:
 
@@ -46,22 +50,38 @@ The module has only the set funtions in pkg/options to update the config and the
 package main
 
 import (
-    "fmt"
-    
-    "github.com/skillptm/bws"
+	"fmt"
+
+	"github.com/skillptm/bws"
+	"github.com/skillptm/bws/pkg/options"
 )
 
 func main() {
-    cat_results := bws.Search("cat video", []string{"mp4", "mkv"}, false)
+	options.SetCPUThreads(8)
 
-    for _, result := range cat_results {
-        fmt.Println(result)
-    }
+	catResults := bws.Search("cat video", []string{"mp4", "mkv"}, false)
 
-    dog_results := bws.Search("dog pictures", []string{"Folder"}, true)
+	for _, result := range catResults {
+		fmt.Println(result)
+	}
 
-    for _, result := range dog_results {
-        fmt.Println(result)
-    }
+	dogResults := bws.Search("dog pictures", []string{"Folder"}, true)
+
+	for _, result := range dogResults {
+		fmt.Println(result)
+	}
+
+	var dragonResults []string
+	breakChan := make(chan bool, 1)
+
+	go func() {
+		dragonResults = bws.GoSearchWithBreak("dragon audio", []string{".mp3"}, true, breakChan)
+	}()
+
+	breakChan <- true // now the goroutine has stopped and put an empty slice on dragonResults
+
+	for _, result := range dragonResults {
+		fmt.Println(result) // this line won't be executed
+	}
 }
 ```
