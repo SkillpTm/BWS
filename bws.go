@@ -69,8 +69,7 @@ On it's first execution the function will take longer, as it needs to generate t
 func Search(searchString string, fileExtensions []string, extendedSearch bool) []string {
 	// check if the FileSystem is setup properly, if not reset it by regenerating it
 	if !cache.EntrieFilesystem.SetupProperly {
-		cache.EntrieFilesystem = cache.New(config.BWSConfig.MainDirs, config.BWSConfig.SecondaryDirs)
-		cache.EntrieFilesystem.SetupProperly = true
+		ForceUpdateCache()
 	}
 
 	// wait for the FileSystem to be readable
@@ -93,4 +92,14 @@ func Search(searchString string, fileExtensions []string, extendedSearch bool) [
 
 	// rank and sort the files
 	return *search.Rank(results, pattern)
+}
+
+/*
+ForceUpdateCache updates the cache regardless of it's state.
+
+This function is generally not needed. Though it can be useful, if you want to generate the cache early, before your first search.
+*/
+func ForceUpdateCache() {
+	cache.EntrieFilesystem = cache.New(config.BWSConfig.MainDirs, config.BWSConfig.SecondaryDirs)
+	cache.EntrieFilesystem.SetupProperly = true
 }
