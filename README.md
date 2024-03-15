@@ -39,10 +39,10 @@ There is a default config that you can update with the set functions in ./pkg/op
 ## Usage:
 
 The only functions in this module are:
-- bws.Search: Used for a regular search
-- bws.GoSearchWithBreak: The same as Search, just with the option of ending it early (which will cause you receiving an empty result)
-- bws.ForceUpdateCache: No matter the circumstances updates the cache.
-- The Set functions inside pkg/options used to change the modules config.
+- [Search](https://github.com/SkillpTm/BWS/blob/master/bws.go#L113): Used for a regular search
+- [GoSearchWithBreak](https://github.com/SkillpTm/BWS/blob/master/bws.go#L122): The same as Search, just with the option of ending it early (which will cause you receiving an empty result)
+- [ForceUpdateCache](https://github.com/SkillpTm/BWS/blob/master/bws.go#L142): No matter the circumstances updates the cache.
+- The Set functions inside [pkg/options](https://github.com/SkillpTm/BWS/blob/master/pkg/options/options.go#L2) used to change the modules config.
 
 ### Example:
 
