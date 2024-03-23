@@ -2,7 +2,6 @@
 package search
 
 import (
-	"fmt"
 	"io/fs"
 	"math"
 	"os"
@@ -107,7 +106,6 @@ func Rank(searchResults *[][]string, pattern *SearchString, forceStopChan chan b
 
 	// put the ranked and sorted paths onto the output
 	for _, file := range rankedFiles {
-		fmt.Println(file.points, file.path)
 		output = append(output, file.path)
 	}
 
