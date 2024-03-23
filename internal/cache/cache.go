@@ -156,18 +156,12 @@ func (fs *Filesystem) traverse(isMainDirs bool, pathQueue chan string, resultsCh
 					newEntries = append(newEntries, []string{entryPath, entry.Name(), "Folder"})
 				} else {
 					entryPath := util.FormatEntry(filepath.Join(currentDir, entry.Name()), false)
-
 					fileExtension := filepath.Ext(entry.Name())
-					fileName := ""
 
 					if len(fileExtension) < 1 {
 						fileExtension = "File"
-						fileName = entry.Name()
-					} else {
-						fileName = entry.Name()[:len(entry.Name())-len(fileExtension)]
 					}
-
-					newEntries = append(newEntries, []string{entryPath, fileName, fileExtension})
+					newEntries = append(newEntries, []string{entryPath, entry.Name(), fileExtension})
 				}
 			}
 
