@@ -72,16 +72,19 @@ func main() {
 	}
 
 	var dragonResults []string
+	var brokenEarly bool
 	breakChan := make(chan bool, 1)
 
 	go func() {
-		dragonResults = bws.GoSearchWithBreak("dragon audio", []string{".mp3"}, true, breakChan)
+		dragonResults, brokenEarly = bws.GoSearchWithBreak("dragon audio", []string{}, true, breakChan)
 	}()
 
-	breakChan <- true // now the goroutine has stopped and put an empty slice on dragonResults
+	breakChan <- true // now the search has stopped
 
-	for _, result := range dragonResults {
-		fmt.Println(result) // this line won't be executed
+	fmt.Println(dragonResults)
+
+	if brokenEarly {
+		fmt.Printf("The search was broken early.")
 	}
 }
 ```
