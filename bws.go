@@ -5,6 +5,7 @@ package bws
 
 import (
 	"log"
+	"runtime"
 	"time"
 
 	"github.com/skillptm/bws/internal/cache"
@@ -68,15 +69,6 @@ func baseSearch(searchString string, fileExtensions []string, extendedSearch boo
 	// check if the FileSystem is setup properly, if not reset it by regenerating it
 	if !cache.EntrieFilesystem.SetupProperly {
 		ForceUpdateCache()
-	}
-
-	// wait for the FileSystem to be readable
-	for {
-		if cache.EntrieFilesystem.Readable {
-			break
-		}
-
-		time.Sleep(100 * time.Millisecond)
 	}
 
 	// make it so while we search we can't update the FileSystem
@@ -143,5 +135,5 @@ This function is generally not needed. Though it can be useful, if you want to g
 */
 func ForceUpdateCache() {
 	cache.EntrieFilesystem = cache.New(config.BWSConfig.MainDirs, config.BWSConfig.SecondaryDirs)
-	cache.EntrieFilesystem.SetupProperly = true
+	runtime.GC()
 }
