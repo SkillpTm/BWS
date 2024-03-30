@@ -45,6 +45,7 @@ func updateCache() {
 			// check if the Filesystem is Updateable, if so update it, otherwise wait for the next cycle
 			if cache.EntrieFilesystem.Updateable {
 				cache.EntrieFilesystem.Update(config.BWSConfig.MainDirs, true)
+				runtime.GC()
 			}
 		case <-secondaryDirsTicker.C:
 			if !cache.EntrieFilesystem.SetupProperly {
@@ -54,6 +55,7 @@ func updateCache() {
 			// check if the Filesystem is Updateable, if so update it, otherwise wait for the next cycle
 			if cache.EntrieFilesystem.Updateable {
 				cache.EntrieFilesystem.Update(config.BWSConfig.SecondaryDirs, false)
+				runtime.GC()
 			}
 		}
 	}
